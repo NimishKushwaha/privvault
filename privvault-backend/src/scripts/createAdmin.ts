@@ -23,7 +23,7 @@ async function createAdminUser() {
 
     // Create new admin user
     const admin = new User()
-    admin.email = 'admin@privvault.com'
+    admin.email = 'admin2@privvault.com'
     await admin.setPassword('admin123')
     await userRepository.save(admin)
     console.log('Admin user created successfully')

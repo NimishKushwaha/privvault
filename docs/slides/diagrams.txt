@@ -1,0 +1,62 @@
+For encryption-flow.png:
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│   User Input    │      │ Key Generation  │      │ AES Encryption  │
+│  ┌─────────┐   │─────►│   ┌─────────┐   │─────►│  ┌─────────┐    │
+│  │Sensitive│   │      │   │PBKDF2   │   │      │  │AES-256  │    │
+│  │  Data   │   │      │   │Function │   │      │  │  GCM    │    │
+│  └─────────┘   │      │   └─────────┘   │      │  └─────────┘    │
+└─────────────────┘      └─────────────────┘      └─────────────────┘
+         │                       ▲                         │
+         │                       │                         │
+         │               ┌─────────────────┐              ▼
+         │               │  Randomization  │      ┌─────────────────┐
+         │               │ ┌───────────┐   │      │  Database      │
+         └──────────────►│ │IV + Salt │   │      │ ┌───────────┐  │
+                        │ │Generation │   │      │ │Encrypted  │  │
+                        │ └───────────┘   │      │ │  Data    │  │
+                        └─────────────────┘      └─────────────────┘
+
+For decryption-flow.png:
+┌─────────────────┐      ┌─────────────────┐      ┌─────────────────┐
+│   Load Data     │      │ Key Extraction  │      │ AES Decryption  │
+│  ┌─────────┐   │─────►│   ┌─────────┐   │─────►│  ┌─────────┐    │
+│  │Encrypted│   │      │   │Salt+IV  │   │      │  │AES-256  │    │
+│  │  Data   │   │      │   │Extract  │   │      │  │  GCM    │    │
+│  └─────────┘   │      │   └─────────┘   │      │  └─────────┘    │
+└─────────────────┘      └─────────────────┘      └─────────────────┘
+         ▲                       ▲                         │
+         │                       │                         │
+         │               ┌─────────────────┐              ▼
+         │               │  Master Key     │      ┌─────────────────┐
+         │               │ ┌───────────┐   │      │ Original Data   │
+         │               │ │User's Key │   │      │ ┌───────────┐   │
+         │               │ │256-bit   │   │      │ │Decrypted  │   │
+         │               │ └───────────┘   │      │ │  Data    │   │
+         │               └─────────────────┘      └─────────────────┘
+
+For aes-components.png:
+┌─────────────────────────────────────────────────┐
+│               AES-256-GCM                       │
+├─────────────────────┬───────────────────────────┤
+│    Encryption Key   │    Initialization Vector  │
+│    ┌──────────┐    │    ┌──────────┐          │
+│    │ 256-bit  │    │    │ 16-byte  │          │
+│    └──────────┘    │    └──────────┘          │
+├─────────────────────┼───────────────────────────┤
+│       Salt         │    Authentication Tag      │
+│    ┌──────────┐    │    ┌──────────┐          │
+│    │ 64-byte  │    │    │ 16-byte  │          │
+│    └──────────┘    │    └──────────┘          │
+├─────────────────────┴───────────────────────────┤
+│              Security Features                  │
+│  • Prevents Rainbow Table Attacks              │
+│  • Ensures Unique Ciphertexts                  │
+│  • Validates Data Integrity                    │
+└─────────────────────────────────────────────────┘
+
+Additional Notes:
+- Each box represents a distinct component/process
+- Arrows show data flow direction
+- Dotted lines could represent optional paths
+- Inner boxes show specific implementation details
+- All measurements are in bits/bytes as used in code

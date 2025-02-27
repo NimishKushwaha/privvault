@@ -20,6 +20,7 @@ import {
   useTheme,
   useMediaQuery,
   Pagination,
+  CircularProgress,
 } from '@mui/material'
 import {
   Add as AddIcon,
@@ -58,6 +59,7 @@ export default function Dashboard() {
     category: 'password',
   })
   const [selectedFile, setSelectedFile] = useState<File | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
   const theme = useTheme()
   const isMobile = useMediaQuery(theme.breakpoints.down('sm'))
@@ -76,6 +78,8 @@ export default function Dashboard() {
 
   const handleAddItem = async () => {
     if (!newItem.title || !newItem.content) return;
+
+    setIsLoading(true);
 
     try {
       console.log('Adding new item of category:', newItem.category);
@@ -100,6 +104,8 @@ export default function Dashboard() {
     } catch (error) {
       console.error('Failed to create item:', error);
       alert('Failed to create item. Please try again.');
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -199,6 +205,8 @@ export default function Dashboard() {
   const handleUpdate = async () => {
     if (!editItem) return;
 
+    setIsLoading(true);
+
     try {
       const updatedItem = await itemsApi.update(editItem.id, {
         title: editItem.title,
@@ -214,6 +222,8 @@ export default function Dashboard() {
       setEditItem(null);
     } catch (error) {
       console.error('Failed to update item:', error);
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -281,10 +291,10 @@ export default function Dashboard() {
         }
       };
       
-      if (file.type === 'text/plain') {
+      if (file.type === 'text/plain' || file.type.startsWith('application/')) {
         reader.readAsText(file);
       } else {
-        reader.readAsDataURL(file);
+        reader.readAsDataURL(file); // Read as Data URL for images
       }
     }
   };
@@ -333,44 +343,33 @@ export default function Dashboard() {
   }
 
   const renderEditContentField = () => {
-    if (editItem?.category === 'document') {
-      return (
-        <Box sx={{ mt: 2 }}>
-          <input
-            accept=".txt,.doc,.docx,.pdf"
-            style={{ display: 'none' }}
-            id="edit-file-upload"
-            type="file"
-            onChange={handleEditFileChange}
-          />
-          <label htmlFor="edit-file-upload">
-            <Button
-              component="span"
-              variant="outlined"
-              startIcon={<CloudUploadIcon />}
-              fullWidth
-            >
-              Upload New Document
-            </Button>
-          </label>
-        </Box>
-      )
-    }
-
     return (
-      <TextField
-        margin="dense"
-        label="Content"
-        fullWidth
-        multiline
-        rows={4}
-        value={editItem?.content || ''}
-        onChange={(e) => setEditItem(prev => 
-          prev ? { ...prev, content: e.target.value } : null
+      <Box sx={{ mt: 2 }}>
+        <input
+          accept=".txt,.doc,.docx,.pdf,.png,.jpg,.jpeg,.gif"
+          style={{ display: 'none' }}
+          id="edit-file-upload"
+          type="file"
+          onChange={handleEditFileChange}
+        />
+        <label htmlFor="edit-file-upload">
+          <Button
+            component="span"
+            variant="outlined"
+            startIcon={<CloudUploadIcon />}
+            fullWidth
+          >
+            Upload New Document or Image
+          </Button>
+        </label>
+        {editItem?.fileName && (
+          <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+            Current file: {editItem.fileName}
+          </Typography>
         )}
-      />
-    )
-  }
+      </Box>
+    );
+  };
 
   const filteredItems = items.filter(item =>
     item.title.toLowerCase().includes(search.toLowerCase()) ||
@@ -702,6 +701,7 @@ export default function Dashboard() {
               fullWidth
               value={newItem.title}
               onChange={(e) => setNewItem({ ...newItem, title: e.target.value })}
+              disabled={isLoading}
             />
             <TextField
               select
@@ -717,21 +717,28 @@ export default function Dashboard() {
                 native: true,
                 'aria-label': "Select item category"
               }}
+              disabled={isLoading}
             >
               <option value="password">Password</option>
               <option value="note">Secure Note</option>
               <option value="document">Document</option>
             </TextField>
             {renderContentField()}
+            {isLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <CircularProgress />
+              </Box>
+            )}
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>
-            <Button onClick={() => setOpen(false)}>Cancel</Button>
+            <Button onClick={() => setOpen(false)} disabled={isLoading}>Cancel</Button>
             <Button
               onClick={handleAddItem}
               variant="contained"
               startIcon={<AddIcon />}
+              disabled={isLoading}
             >
-              Add Item
+              {isLoading ? 'Adding...' : 'Add Item'}
             </Button>
           </DialogActions>
         </Dialog>
@@ -761,6 +768,7 @@ export default function Dashboard() {
               onChange={(e) => setEditItem(prev => 
                 prev ? { ...prev, title: e.target.value } : null
               )}
+              disabled={isLoading}
             />
             <TextField
               select
@@ -777,21 +785,28 @@ export default function Dashboard() {
               SelectProps={{ 
                 native: true
               }}
+              disabled={isLoading}
             >
               <option value="password">Password</option>
               <option value="note">Secure Note</option>
               <option value="document">Document</option>
             </TextField>
             {renderEditContentField()}
+            {isLoading && (
+              <Box sx={{ display: 'flex', justifyContent: 'center', mt: 2 }}>
+                <CircularProgress />
+              </Box>
+            )}
           </DialogContent>
           <DialogActions sx={{ p: 2, pt: 0 }}>
-            <Button onClick={() => setEditOpen(false)}>Cancel</Button>
+            <Button onClick={() => setEditOpen(false)} disabled={isLoading}>Cancel</Button>
             <Button
               onClick={handleUpdate}
               variant="contained"
               startIcon={<EditIcon />}
+              disabled={isLoading}
             >
-              Update Item
+              {isLoading ? 'Updating...' : 'Update Item'}
             </Button>
           </DialogActions>
         </Dialog>
