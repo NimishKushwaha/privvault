@@ -54,14 +54,17 @@ export default function Login() {
     <Box
       sx={{
         minHeight: '100vh',
-        minWidth: '100vw',
+        width: '100vw',
         display: 'flex',
-        flexDirection: 'column',
         alignItems: 'center',
         justifyContent: 'center',
         background: 'linear-gradient(135deg, #1a237e 0%, #0d47a1 100%)',
         p: { xs: 2, sm: 3, md: 4 },
         boxSizing: 'border-box',
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        overflow: 'hidden' // Prevent any scrolling
       }}
     >
       <Paper
@@ -69,9 +72,9 @@ export default function Login() {
         sx={{
           borderRadius: 2,
           width: '100%',
-          maxWidth: { xs: '100%', sm: 450 },
+          maxWidth: { xs: '90%', sm: 450 },
           overflow: 'hidden',
-          mx: 'auto',
+          position: 'relative'
         }}
       >
         <Box
@@ -96,7 +99,7 @@ export default function Login() {
             PrivVault
           </Typography>
         </Box>
-        <CardContent sx={{ p: { xs: 2, sm: 4 } }}>
+        <CardContent sx={{ p: { xs: 2, sm: 4 }, position: 'relative' }}>
           <Typography 
             variant="h6" 
             gutterBottom 
@@ -171,16 +174,45 @@ export default function Login() {
                 '&:hover': {
                   background: 'linear-gradient(135deg, #0d47a1 0%, #1a237e 100%)',
                 },
-                display: 'flex',
-                justifyContent: 'center',
-                alignItems: 'center',
+                position: 'relative', // Add this
+                minHeight: 36 // Add this to maintain button height
               }}
               disabled={isLoading}
               size={isMobile ? "medium" : "large"}
             >
-              {isLoading ? <CircularProgress size={24} /> : 'Sign In'}
+              {isLoading ? (
+                <CircularProgress
+                  size={24}
+                  sx={{
+                    position: 'absolute',
+                    top: '50%',
+                    left: '50%',
+                    marginTop: '-12px',
+                    marginLeft: '-12px'
+                  }}
+                />
+              ) : 'Sign In'}
             </Button>
           </form>
+          {isLoading && (
+            <Box
+              sx={{
+                position: 'absolute',
+                top: 0,
+                left: 0,
+                right: 0,
+                bottom: 0,
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                bgcolor: 'rgba(255, 255, 255, 0.8)',
+                zIndex: 1,
+                borderRadius: 'inherit'
+              }}
+            >
+              <CircularProgress />
+            </Box>
+          )}
           {/* <Typography
             variant="body2"
             sx={{
@@ -199,4 +231,4 @@ export default function Login() {
       </Paper>
     </Box>
   )
-} 
+}

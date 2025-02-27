@@ -188,19 +188,27 @@ export default function Dashboard() {
 
   const handleEdit = async (item: SecureItem) => {
     try {
-      const decryptedContent = await decryptData(item.encryptedContent)
+      console.log('Editing item:', item);
+      let decryptedContent = item.encryptedContent;
+      
+      // Only decrypt if it's not a document
+      if (item.category !== 'document') {
+        decryptedContent = await decryptData(item.encryptedContent);
+      }
+      
       setEditItem({
         id: item.id,
         title: item.title,
         content: decryptedContent,
         category: item.category,
         fileName: item.fileName || undefined
-      })
-      setEditOpen(true)
+      });
+      setEditOpen(true);
     } catch (error) {
-      console.error('Decryption failed:', error)
+      console.error('Error preparing item for edit:', error);
+      alert('Failed to prepare item for editing');
     }
-  }
+  };
 
   const handleUpdate = async () => {
     if (!editItem) return;
@@ -343,31 +351,48 @@ export default function Dashboard() {
   }
 
   const renderEditContentField = () => {
+    if (!editItem) return null;
+
+    if (editItem.category === 'document') {
+      return (
+        <Box sx={{ mt: 2 }}>
+          <input
+            accept=".txt,.doc,.docx,.pdf,.png,.jpg,.jpeg,.gif"
+            style={{ display: 'none' }}
+            id="edit-file-upload"
+            type="file"
+            onChange={handleEditFileChange}
+          />
+          <label htmlFor="edit-file-upload">
+            <Button
+              component="span"
+              variant="outlined"
+              startIcon={<CloudUploadIcon />}
+              fullWidth
+            >
+              Upload New Document or Image
+            </Button>
+          </label>
+          {editItem.fileName && (
+            <Typography variant="caption" display="block" sx={{ mt: 1 }}>
+              Current file: {editItem.fileName}
+            </Typography>
+          )}
+        </Box>
+      );
+    }
+
+    // For passwords and notes, show text field with existing content
     return (
-      <Box sx={{ mt: 2 }}>
-        <input
-          accept=".txt,.doc,.docx,.pdf,.png,.jpg,.jpeg,.gif"
-          style={{ display: 'none' }}
-          id="edit-file-upload"
-          type="file"
-          onChange={handleEditFileChange}
-        />
-        <label htmlFor="edit-file-upload">
-          <Button
-            component="span"
-            variant="outlined"
-            startIcon={<CloudUploadIcon />}
-            fullWidth
-          >
-            Upload New Document or Image
-          </Button>
-        </label>
-        {editItem?.fileName && (
-          <Typography variant="caption" display="block" sx={{ mt: 1 }}>
-            Current file: {editItem.fileName}
-          </Typography>
-        )}
-      </Box>
+      <TextField
+        margin="dense"
+        label="Content"
+        fullWidth
+        multiline
+        rows={4}
+        value={editItem.content}
+        onChange={(e) => setEditItem({ ...editItem, content: e.target.value })}
+      />
     );
   };
 
@@ -527,7 +552,27 @@ export default function Dashboard() {
       display: 'flex',
       flexDirection: 'column',
       overflow: 'hidden',
+      position: 'relative' // Add this
     }}>
+      {isLoading && (
+        <Box
+          sx={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            bgcolor: 'rgba(255, 255, 255, 0.8)',
+            zIndex: 9999,
+          }}
+        >
+          <CircularProgress size={40} />
+        </Box>
+      )}
+      
       <Box sx={{ 
         flex: 1,
         p: { xs: 2, sm: 3 }, 
@@ -852,4 +897,4 @@ export default function Dashboard() {
       </Box>
     </Box>
   )
-} 
+}
