@@ -7,7 +7,7 @@ import Login from './pages/Login'
 import Dashboard from './pages/Dashboard'
 import PrivateRoute from './components/PrivateRoute'
 import { useAuth } from './hooks/useAuth'
-import { initializeEncryptionKey } from './utils/crypto'
+import { initializeEncryptionKey } from './utils/Crypto'
 
 const darkTheme = createTheme({
   palette: {
